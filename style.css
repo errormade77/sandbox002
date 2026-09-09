@@ -125,9 +125,8 @@ html.is-vertical-strip .params-panel {
   top: auto !important;
   width: auto !important;
   max-width: none !important;
-  min-height: 0 !important;
-  height: auto !important;
-  max-height: 50dvh;
+  max-height: 100dvh;
+  height: 100dvh !important;
   border-radius: 16px 16px 0 0;
   border-left: 0;
   border-right: 0;
@@ -163,9 +162,8 @@ html.is-vertical-strip .params-panel__close::before {
     top: auto !important;
     width: auto !important;
     max-width: none !important;
-    min-height: 0 !important;
-    height: auto !important;
-    max-height: 50dvh;
+    max-height: 100dvh;
+    height: 100dvh !important;
     border-radius: 16px 16px 0 0;
     border-left: 0;
     border-right: 0;

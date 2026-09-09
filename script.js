@@ -508,14 +508,14 @@ function clampPosition(x, y) {
 function dockMobilePanel() {
   if (!isVerticalStrip() || !panel || panel.hidden) return;
   const box = panelViewBox();
-  const maxH = Math.max(160, Math.round(box.h * 0.5));
+  const maxH = Math.max(160, Math.round(box.h));
   panel.style.left = `${box.x}px`;
   panel.style.width = `${box.w}px`;
   panel.style.right = "auto";
   panel.style.bottom = "auto";
+  panel.style.height = `${maxH}px`;
   panel.style.maxHeight = `${maxH}px`;
-  const height = Math.min(panel.getBoundingClientRect().height || maxH, maxH);
-  panel.style.top = `${Math.round(box.y + box.h - height)}px`;
+  panel.style.top = `${box.y}px`;
 }
 
 function placePanel(x, y) {
@@ -529,6 +529,7 @@ function placePanel(x, y) {
   panel.style.right = "auto";
   panel.style.bottom = "auto";
   panel.style.width = "";
+  panel.style.height = "";
   panel.style.maxHeight = "";
   return pos;
 }
