@@ -132,7 +132,7 @@ function applyStripMode() {
 
 const STORAGE_KEY = "stand-params-panel";
 const PRESETS_KEY = "stand-presets-v1";
-const KEEP_PRESET_NAMES = new Set(["BLUE", "COLOR"]);
+const KEEP_PRESET_NAMES = new Set(["BLUR", "COLOR"]);
 const COUNT_MAX = 400;
 const DEFAULTS = {
   count: 5,
@@ -394,7 +394,7 @@ function keptPresetsPayload(source) {
   const presets = (Array.isArray(source?.presets) ? source.presets : [])
     .map(normalizePreset)
     .filter(Boolean)
-    .map((preset) => ({ ...preset, name: preset.name === "BLUR" ? "BLUE" : preset.name }))
+    .map((preset) => ({ ...preset, name: preset.name === "BLUE" ? "BLUR" : preset.name }))
     .filter((preset) => KEEP_PRESET_NAMES.has(preset.name));
   const ids = new Set(presets.map((preset) => preset.id));
   const fallback = presets.find((preset) => preset.name === "COLOR")?.id || presets[0]?.id || "";
