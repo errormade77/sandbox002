@@ -12,7 +12,10 @@ ROOT = Path(__file__).resolve().parent
 PRESETS_FILE = ROOT / "stand-presets.json"
 PORT = int(os.environ.get("PORT", "5173"))
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-PLAYLIST_RE = re.compile(r"(?:playlist/|spotify:playlist:)([A-Za-z0-9]+)")
+SPOTIFY_RE = re.compile(
+    r"(?:open\.spotify\.com(?:/intl-[a-z]+)?(?:/embed)?/|spotify:)(playlist|album|track)[:/]([A-Za-z0-9]+)",
+    re.I,
+)
 IMAGE_TYPES = {
     "image/jpeg",
     "image/jpg",
@@ -80,26 +83,31 @@ def write_presets(payload):
     tmp.replace(PRESETS_FILE)
 
 
-def find_playlist_entity(node):
+def find_spotify_entity(node):
     if isinstance(node, dict):
+        kind = node.get("type")
         tracks = node.get("trackList")
-        if node.get("type") == "playlist" and isinstance(tracks, list):
+        if kind in {"playlist", "album"} and isinstance(tracks, list):
+            return node
+        if kind == "track" and (node.get("uri") or node.get("id")):
             return node
         for value in node.values():
-            found = find_playlist_entity(value)
+            found = find_spotify_entity(value)
             if found:
                 return found
     elif isinstance(node, list):
         for value in node:
-            found = find_playlist_entity(value)
+            found = find_spotify_entity(value)
             if found:
                 return found
     return None
 
 
-def parse_playlist_id(url):
-    match = PLAYLIST_RE.search(url or "")
-    return match.group(1) if match else None
+def parse_spotify_resource(url):
+    match = SPOTIFY_RE.search(url or "")
+    if not match:
+        return None
+    return match.group(1).lower(), match.group(2)
 
 
 def track_id_from_uri(uri):
@@ -108,8 +116,39 @@ def track_id_from_uri(uri):
     return str(uri).rsplit(":", 1)[-1]
 
 
-def fetch_embed(playlist_id):
-    url = f"https://open.spotify.com/embed/playlist/{playlist_id}"
+def artist_from_item(item):
+    subtitle = (item.get("subtitle") or "").strip()
+    if subtitle:
+        return subtitle
+    artists = item.get("artists")
+    names = []
+    if isinstance(artists, list):
+        for artist in artists:
+            if isinstance(artist, dict) and artist.get("name"):
+                names.append(str(artist["name"]).strip())
+            elif isinstance(artist, str) and artist.strip():
+                names.append(artist.strip())
+    return ", ".join(names)
+
+
+def track_from_item(item):
+    if not isinstance(item, dict):
+        return None
+    preview = item.get("audioPreview") or {}
+    track_id = track_id_from_uri(item.get("uri") or item.get("id"))
+    title = (item.get("title") or item.get("name") or "").strip()
+    if not track_id or not title:
+        return None
+    return {
+        "id": track_id,
+        "title": title,
+        "artist": artist_from_item(item),
+        "previewUrl": preview.get("url") or "" if isinstance(preview, dict) else "",
+    }
+
+
+def fetch_embed(kind, spotify_id):
+    url = f"https://open.spotify.com/embed/{kind}/{spotify_id}"
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(request, timeout=20) as response:
         return response.read().decode("utf-8", "replace")
@@ -118,34 +157,23 @@ def fetch_embed(playlist_id):
 def parse_tracks(html):
     match = NEXT_DATA_RE.search(html)
     if not match:
-        raise ValueError("Не удалось прочитать данные плейлиста")
+        raise ValueError("Не удалось прочитать данные Spotify")
     payload = json.loads(match.group(1))
-    entity = find_playlist_entity(payload)
+    entity = find_spotify_entity(payload)
     if not entity:
-        raise ValueError("Плейлист не найден или закрыт")
+        raise ValueError("Плейлист или альбом не найдены, либо закрыты")
 
-    tracks = []
-    for item in entity.get("trackList") or []:
-        preview = item.get("audioPreview") or {}
-        track_id = track_id_from_uri(item.get("uri"))
-        title = (item.get("title") or "").strip()
-        if not track_id or not title:
-            continue
-        tracks.append(
-            {
-                "id": track_id,
-                "title": title,
-                "artist": (item.get("subtitle") or "").strip(),
-                "previewUrl": preview.get("url") or "",
-            }
-        )
+    if entity.get("type") == "track":
+        tracks = [track for track in [track_from_item(entity)] if track]
+    else:
+        tracks = [track for track in map(track_from_item, entity.get("trackList") or []) if track]
 
     if not tracks:
-        raise ValueError("В плейлисте нет треков")
+        raise ValueError("Нет треков с превью")
 
     return {
         "id": entity.get("id") or "",
-        "name": entity.get("name") or entity.get("title") or "Плейлист",
+        "name": entity.get("name") or entity.get("title") or "Spotify",
         "tracks": tracks[:400],
     }
 
@@ -189,19 +217,20 @@ class Handler(SimpleHTTPRequestHandler):
 
     def handle_playlist(self, query):
         raw_url = (query.get("url") or [""])[0]
-        playlist_id = parse_playlist_id(raw_url)
-        if not playlist_id:
-            self.json_response(400, {"error": "Вставьте ссылку на плейлист Spotify"})
+        resource = parse_spotify_resource(raw_url)
+        if not resource:
+            self.json_response(400, {"error": "Вставьте ссылку на плейлист или альбом Spotify"})
             return
+        kind, spotify_id = resource
         try:
-            html = fetch_embed(playlist_id)
+            html = fetch_embed(kind, spotify_id)
             data = parse_tracks(html)
             self.json_response(200, data)
         except urllib.error.HTTPError as error:
-            message = "Плейлист не найден" if error.code == 404 else "Spotify не ответил"
+            message = "Не найдено в Spotify" if error.code == 404 else "Spotify не ответил"
             self.json_response(error.code, {"error": message})
         except Exception as error:
-            self.json_response(502, {"error": str(error) or "Не удалось загрузить плейлист"})
+            self.json_response(502, {"error": str(error) or "Не удалось загрузить Spotify"})
 
     def handle_image(self, query):
         raw_url = (query.get("url") or [""])[0]

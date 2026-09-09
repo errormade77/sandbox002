@@ -3162,9 +3162,12 @@ async function hydrateCovers() {
 
 let playlistLoadId = 0;
 
-function playlistIdFromUrl(url) {
-  const match = String(url || "").match(/(?:playlist\/|spotify:playlist:)([A-Za-z0-9]+)/i);
-  return match ? match[1] : "";
+function spotifyResourceFromUrl(url) {
+  const match = String(url || "").match(
+    /(?:open\.spotify\.com(?:\/intl-[a-z]+)?(?:\/embed)?\/|spotify:)(playlist|album|track)[:/]([A-Za-z0-9]+)/i
+  );
+  if (!match) return null;
+  return { type: match[1].toLowerCase(), id: match[2] };
 }
 
 function playlistCacheUrl(id) {
@@ -3176,6 +3179,104 @@ function playlistCacheUrl(id) {
   }
 }
 
+function artistFromSpotifyItem(item) {
+  const subtitle = String(item?.subtitle || "").trim();
+  if (subtitle) return subtitle;
+  const artists = Array.isArray(item?.artists) ? item.artists : [];
+  return artists
+    .map((artist) => (typeof artist === "string" ? artist : artist?.name || ""))
+    .map((name) => String(name).trim())
+    .filter(Boolean)
+    .join(", ");
+}
+
+function trackFromSpotifyItem(item) {
+  if (!item || typeof item !== "object") return null;
+  const id = String(item.uri || item.id || "").split(":").pop();
+  const title = String(item.title || item.name || "").trim();
+  if (!id || !title) return null;
+  const preview = item.audioPreview && typeof item.audioPreview === "object" ? item.audioPreview.url : "";
+  return {
+    id,
+    title,
+    artist: artistFromSpotifyItem(item),
+    previewUrl: preview || "",
+  };
+}
+
+function findSpotifyEntity(node) {
+  if (Array.isArray(node)) {
+    for (const value of node) {
+      const found = findSpotifyEntity(value);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (!node || typeof node !== "object") return null;
+  const kind = node.type;
+  if ((kind === "playlist" || kind === "album") && Array.isArray(node.trackList)) return node;
+  if (kind === "track" && (node.uri || node.id) && (node.title || node.name)) return node;
+  for (const value of Object.values(node)) {
+    const found = findSpotifyEntity(value);
+    if (found) return found;
+  }
+  return null;
+}
+
+function parseSpotifyEmbed(html) {
+  const match = String(html || "").match(
+    /<script id="__NEXT_DATA__" type="application\/json">([\s\S]+?)<\/script>/
+  );
+  if (!match) throw new Error("Не удалось прочитать данные Spotify");
+  const payload = JSON.parse(match[1]);
+  const entity = findSpotifyEntity(payload);
+  if (!entity) throw new Error("Плейлист или альбом не найдены, либо закрыты");
+  const tracks =
+    entity.type === "track"
+      ? [trackFromSpotifyItem(entity)].filter(Boolean)
+      : (entity.trackList || []).map(trackFromSpotifyItem).filter(Boolean);
+  if (!tracks.length) throw new Error("Нет треков");
+  return {
+    id: entity.id || "",
+    name: entity.name || entity.title || "Spotify",
+    tracks: tracks.slice(0, 400),
+  };
+}
+
+async function fetchText(url, options = {}) {
+  const response = await fetch(url, options);
+  if (!response.ok) throw new Error(`http ${response.status}`);
+  return response.text();
+}
+
+async function fetchEmbedHtml(embedUrl) {
+  const encoded = encodeURIComponent(embedUrl);
+  const loaders = [
+    () =>
+      fetchText(`https://r.jina.ai/${embedUrl}`, {
+        headers: { "X-Return-Format": "html" },
+      }),
+    () => fetchText(`https://api.allorigins.win/raw?url=${encoded}`),
+  ];
+  let lastError = null;
+  for (const load of loaders) {
+    try {
+      const html = await load();
+      if (html && html.includes("__NEXT_DATA__")) return html;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError || new Error("Не удалось загрузить Spotify");
+}
+
+async function fetchSpotifyViaEmbed(url) {
+  const resource = spotifyResourceFromUrl(url);
+  if (!resource) throw new Error("Вставьте ссылку на плейлист или альбом Spotify");
+  const html = await fetchEmbedHtml(`https://open.spotify.com/embed/${resource.type}/${resource.id}`);
+  return parseSpotifyEmbed(html);
+}
+
 async function fetchPlaylistPayload(url) {
   let apiError = "";
   try {
@@ -3185,38 +3286,45 @@ async function fetchPlaylistPayload(url) {
     if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
       const data = JSON.parse(trimmed);
       if (response.ok && Array.isArray(data.tracks) && data.tracks.length) return data;
-      apiError = data.error || "Не удалось загрузить плейлист";
+      apiError = data.error || "Не удалось загрузить Spotify";
     }
   } catch {}
 
-  const id = playlistIdFromUrl(url);
-  if (id) {
-    const cached = await fetchJson(playlistCacheUrl(id));
+  const resource = spotifyResourceFromUrl(url);
+  if (resource?.id) {
+    const cached = await fetchJson(playlistCacheUrl(resource.id));
     if (cached && Array.isArray(cached.tracks) && cached.tracks.length) return cached;
   }
 
-  throw new Error(apiError || "Не удалось загрузить плейлист. Откройте http://127.0.0.1:5174/");
+  try {
+    const remote = await fetchSpotifyViaEmbed(url);
+    if (remote && Array.isArray(remote.tracks) && remote.tracks.length) return remote;
+  } catch (error) {
+    apiError = error.message || apiError;
+  }
+
+  throw new Error(apiError || "Не удалось загрузить Spotify");
 }
 
 async function loadSpotifyPlaylist(url, { persist = true } = {}) {
   const trimmed = String(url || "").trim();
   if (!trimmed) {
-    setSpotifyStatus("Вставьте ссылку на плейлист Spotify", true);
+    setSpotifyStatus("Вставьте ссылку на плейлист или альбом Spotify", true);
     return;
   }
 
   const requestId = (playlistLoadId += 1);
   if (spotifyLoad) spotifyLoad.disabled = true;
-  setSpotifyStatus("Загружаю плейлист…");
+  setSpotifyStatus("Загружаю Spotify…");
 
   try {
     const data = await fetchPlaylistPayload(trimmed);
     if (requestId !== playlistLoadId) return;
-    if (!data) throw new Error("Не удалось загрузить плейлист");
+    if (!data) throw new Error("Не удалось загрузить Spotify");
 
     playlistTracks = Array.isArray(data.tracks) ? data.tracks : [];
     playlistName = data.name || "";
-    if (!playlistTracks.length) throw new Error("В плейлисте нет треков");
+    if (!playlistTracks.length) throw new Error("Нет треков");
 
     if (persist) saveState({ spotifyUrl: trimmed, count: playlistTracks.length });
     else saveState({ count: playlistTracks.length });
@@ -3228,7 +3336,7 @@ async function loadSpotifyPlaylist(url, { persist = true } = {}) {
     hydrateCovers();
   } catch (error) {
     if (requestId !== playlistLoadId) return;
-    setSpotifyStatus(error.message || "Не удалось загрузить плейлист", true);
+    setSpotifyStatus(error.message || "Не удалось загрузить Spotify", true);
   } finally {
     if (requestId === playlistLoadId && spotifyLoad) spotifyLoad.disabled = false;
   }
