@@ -2498,7 +2498,18 @@ void main() {
 
 function mediaUrl(url) {
   const raw = String(url || "");
-  if (!raw || raw.startsWith("/api/") || raw.startsWith(window.location.origin)) return raw;
+  if (!raw) return raw;
+  if (raw.startsWith("/api/") || raw.startsWith(window.location.origin)) return raw;
+  try {
+    const host = new URL(raw, window.location.href).hostname.toLowerCase();
+    const spotifyCdn =
+      host === "scdn.co" ||
+      host.endsWith(".scdn.co") ||
+      host.endsWith(".spotifycdn.com") ||
+      host.endsWith(".spotify.com") ||
+      host.endsWith(".akamaized.net");
+    if (spotifyCdn) return raw;
+  } catch {}
   return `/api/audio?url=${encodeURIComponent(raw)}`;
 }
 
@@ -3009,9 +3020,10 @@ function playTrack(index) {
           vizHoldPlaying = false;
           syncPlayingClass();
         })
-        .catch(() => {
+        .catch((error) => {
           vizHoldPlaying = false;
           syncPlayingClass();
+          setSpotifyStatus(error?.message || "Не удалось включить аудио", true);
         });
       return;
     }
@@ -3034,9 +3046,10 @@ function playTrack(index) {
       vizHoldPlaying = false;
       syncPlayingClass();
     })
-    .catch(() => {
+    .catch((error) => {
       vizHoldPlaying = false;
       syncPlayingClass();
+      setSpotifyStatus(error?.message || "Не удалось включить аудио", true);
     });
 }
 
@@ -3059,7 +3072,10 @@ function toggleActiveTrack() {
   }
   if (player.paused) {
     ensureAnalyser();
-    player.play().then(syncPlayingClass).catch(syncPlayingClass);
+    player.play().then(syncPlayingClass).catch((error) => {
+      syncPlayingClass();
+      setSpotifyStatus(error?.message || "Не удалось включить аудио", true);
+    });
     return;
   }
   player.pause();
@@ -3188,6 +3204,10 @@ async function loadSpotifyPlaylist(url, { persist = true } = {}) {
 player.addEventListener("play", syncPlayingClass);
 player.addEventListener("pause", syncPlayingClass);
 player.addEventListener("ended", syncPlayingClass);
+player.addEventListener("error", () => {
+  const track = playlistTracks[activeIndex];
+  setSpotifyStatus(track ? `Не удалось включить: ${track.title}` : "Не удалось включить аудио", true);
+});
 
 if (spotifyLoad) {
   spotifyLoad.addEventListener("click", () => {
