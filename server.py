@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import os
 import re
 import urllib.error
 import urllib.request
@@ -9,7 +10,7 @@ from urllib.parse import parse_qs, urlparse
 
 ROOT = Path(__file__).resolve().parent
 PRESETS_FILE = ROOT / "stand-presets.json"
-PORT = 5173
+PORT = int(os.environ.get("PORT", "5173"))
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
 PLAYLIST_RE = re.compile(r"(?:playlist/|spotify:playlist:)([A-Za-z0-9]+)")
 IMAGE_TYPES = {
@@ -285,5 +286,4 @@ class Handler(SimpleHTTPRequestHandler):
 if __name__ == "__main__":
     server = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
     print(f"Stand: http://127.0.0.1:{PORT}")
-    print(f"Phone: http://192.168.2.14:{PORT}")
     server.serve_forever()
