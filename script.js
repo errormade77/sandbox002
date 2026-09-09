@@ -3113,6 +3113,42 @@ async function hydrateCovers() {
 
 let playlistLoadId = 0;
 
+function playlistIdFromUrl(url) {
+  const match = String(url || "").match(/(?:playlist\/|spotify:playlist:)([A-Za-z0-9]+)/i);
+  return match ? match[1] : "";
+}
+
+function playlistCacheUrl(id) {
+  const script = document.querySelector('script[src*="script.js"]');
+  try {
+    return new URL(`playlists/${id}.json`, script?.src || window.location.href).href;
+  } catch {
+    return `playlists/${id}.json`;
+  }
+}
+
+async function fetchPlaylistPayload(url) {
+  let apiError = "";
+  try {
+    const response = await fetch(`/api/spotify/playlist?url=${encodeURIComponent(url)}`);
+    const text = await response.text();
+    const trimmed = text.trim();
+    if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+      const data = JSON.parse(trimmed);
+      if (response.ok && Array.isArray(data.tracks) && data.tracks.length) return data;
+      apiError = data.error || "Не удалось загрузить плейлист";
+    }
+  } catch {}
+
+  const id = playlistIdFromUrl(url);
+  if (id) {
+    const cached = await fetchJson(playlistCacheUrl(id));
+    if (cached && Array.isArray(cached.tracks) && cached.tracks.length) return cached;
+  }
+
+  throw new Error(apiError || "Не удалось загрузить плейлист. Откройте http://127.0.0.1:5174/");
+}
+
 async function loadSpotifyPlaylist(url, { persist = true } = {}) {
   const trimmed = String(url || "").trim();
   if (!trimmed) {
@@ -3125,10 +3161,9 @@ async function loadSpotifyPlaylist(url, { persist = true } = {}) {
   setSpotifyStatus("Загружаю плейлист…");
 
   try {
-    const response = await fetch(`/api/spotify/playlist?url=${encodeURIComponent(trimmed)}`);
-    const data = await response.json();
+    const data = await fetchPlaylistPayload(trimmed);
     if (requestId !== playlistLoadId) return;
-    if (!response.ok) throw new Error(data.error || "Не удалось загрузить плейлист");
+    if (!data) throw new Error("Не удалось загрузить плейлист");
 
     playlistTracks = Array.isArray(data.tracks) ? data.tracks : [];
     playlistName = data.name || "";
