@@ -385,6 +385,68 @@ html.is-module-hover .module {
   min-height: 160px;
   padding: 12px 14px 16px;
   overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spotify-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 8px;
+}
+
+.param-fold {
+  margin: 0;
+  border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+}
+
+.param-fold__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  list-style: none;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #86868b;
+  user-select: none;
+}
+
+.param-fold__title::-webkit-details-marker {
+  display: none;
+}
+
+.param-fold__title::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  margin-left: 8px;
+  border-right: 1.5px solid #86868b;
+  border-bottom: 1.5px solid #86868b;
+  transform: rotate(45deg);
+  transition: transform 0.16s ease;
+}
+
+.param-fold[open] > .param-fold__title::after {
+  transform: rotate(-135deg);
+}
+
+.param-fold__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 0 12px;
+}
+
+#zoomParams {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .params-tab {

@@ -67,10 +67,6 @@ const hoverFollowRange = document.getElementById("hoverFollowRange");
 const spotifyInput = document.getElementById("spotifyPlaylist");
 const spotifyLoad = document.getElementById("spotifyLoad");
 const spotifyStatus = document.getElementById("spotifyStatus");
-const tabStandBtn = document.getElementById("tabStandBtn");
-const tabVizBtn = document.getElementById("tabVizBtn");
-const tabStandPanel = document.getElementById("tabStandPanel");
-const tabVizPanel = document.getElementById("tabVizPanel");
 const vizBgOnInput = document.getElementById("vizBgOn");
 const vizBgModeInput = document.getElementById("vizBgMode");
 const vizBgBlurInput = document.getElementById("vizBgBlur");
@@ -136,6 +132,7 @@ function applyStripMode() {
 
 const STORAGE_KEY = "stand-params-panel";
 const PRESETS_KEY = "stand-presets-v1";
+const KEEP_PRESET_NAMES = new Set(["BLUE", "COLOR"]);
 const COUNT_MAX = 400;
 const DEFAULTS = {
   count: 5,
@@ -393,6 +390,23 @@ function normalizePreset(preset) {
   return { id, name, values: snapshotParams(valuesSource) };
 }
 
+function keptPresetsPayload(source) {
+  const presets = (Array.isArray(source?.presets) ? source.presets : [])
+    .map(normalizePreset)
+    .filter(Boolean)
+    .map((preset) => ({ ...preset, name: preset.name === "BLUR" ? "BLUE" : preset.name }))
+    .filter((preset) => KEEP_PRESET_NAMES.has(preset.name));
+  const ids = new Set(presets.map((preset) => preset.id));
+  const fallback = presets.find((preset) => preset.name === "COLOR")?.id || presets[0]?.id || "";
+  const selected = ids.has(String(source?.selectedPresetId || "")) ? String(source.selectedPresetId) : fallback;
+  const def = ids.has(String(source?.defaultPresetId || "")) ? String(source.defaultPresetId) : fallback;
+  return {
+    presets,
+    selectedPresetId: selected,
+    defaultPresetId: def,
+  };
+}
+
 function loadPresetsState() {
   if (memoryPresets) {
     return {
@@ -404,16 +418,8 @@ function loadPresetsState() {
 
   const stored = readStorage(PRESETS_KEY);
   const legacy = readStorage(STORAGE_KEY) || {};
-  const source = stored || legacy;
-  const presets = (Array.isArray(source.presets) ? source.presets : [])
-    .map(normalizePreset)
-    .filter(Boolean);
-  memoryPresets = {
-    presets,
-    selectedPresetId: String(source.selectedPresetId || ""),
-    defaultPresetId: String(source.defaultPresetId || ""),
-  };
-  if (!stored && presets.length) writeStorage(PRESETS_KEY, memoryPresets);
+  memoryPresets = keptPresetsPayload(stored || legacy);
+  if (!stored && memoryPresets.presets.length) writeStorage(PRESETS_KEY, memoryPresets);
   return loadPresetsState();
 }
 
@@ -465,12 +471,7 @@ function pushPresetsToServer(state) {
 }
 
 function applyPresetsPayload(payload) {
-  const source = payload && typeof payload === "object" ? payload : {};
-  memoryPresets = {
-    presets: (Array.isArray(source.presets) ? source.presets : []).map(normalizePreset).filter(Boolean),
-    selectedPresetId: String(source.selectedPresetId || ""),
-    defaultPresetId: String(source.defaultPresetId || ""),
-  };
+  memoryPresets = keptPresetsPayload(payload);
   writeStorage(PRESETS_KEY, memoryPresets);
 }
 
@@ -549,19 +550,6 @@ function togglePanel() {
   if (panel.hidden) openPanel();
   else closePanel();
 }
-
-function setParamsTab(tab, persist = true) {
-  const next = tab === "viz" ? "viz" : "stand";
-  const standOn = next === "stand";
-  if (tabStandPanel) tabStandPanel.hidden = !standOn;
-  if (tabVizPanel) tabVizPanel.hidden = standOn;
-  tabStandBtn?.setAttribute("aria-selected", standOn ? "true" : "false");
-  tabVizBtn?.setAttribute("aria-selected", standOn ? "false" : "true");
-  if (persist) saveState({ paramsTab: next });
-}
-
-tabStandBtn?.addEventListener("click", () => setParamsTab("stand"));
-tabVizBtn?.addEventListener("click", () => setParamsTab("viz"));
 
 closeBtn.addEventListener("click", closePanel);
 
@@ -1462,7 +1450,6 @@ function syncControls() {
     if (el) el.checked = fallback ? state[key] !== false : Boolean(state[key]);
   });
   syncVizModeRows(state);
-  setParamsTab(loadState().paramsTab === "viz" ? "viz" : "stand", false);
   applyVizBackground();
 }
 

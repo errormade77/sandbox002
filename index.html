@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#f3f2ef" />
     <meta http-equiv="Cache-Control" content="no-store" />
     <title>Стенд</title>
-    <link rel="stylesheet" href="style.css?v=63" />
+    <link rel="stylesheet" href="style.css?v=70" />
     <style>
       .modules {
         position: fixed !important;
@@ -43,405 +43,408 @@
         <button class="params-panel__close" id="paramsClose" type="button" aria-label="Закрыть"></button>
         <h2 id="paramsTitle">Параметры</h2>
       </header>
-      <nav class="params-tabs" role="tablist" aria-label="Разделы параметров">
-        <button
-          class="params-tabs__btn"
-          id="tabStandBtn"
-          type="button"
-          role="tab"
-          aria-selected="true"
-          aria-controls="tabStandPanel"
-        >
-          Стенд
-        </button>
-        <button
-          class="params-tabs__btn"
-          id="tabVizBtn"
-          type="button"
-          role="tab"
-          aria-selected="false"
-          aria-controls="tabVizPanel"
-        >
-          Визуализация
-        </button>
-      </nav>
       <div class="params-panel__body" id="paramsBody">
-        <div class="params-tab" id="tabStandPanel" role="tabpanel" aria-labelledby="tabStandBtn">
-        <p class="param-group param-group--first">Пресеты</p>
-        <label class="param">
-          <span class="param__label">Название нового пресета</span>
-          <input class="param__input param__input--wide" id="presetName" type="text" maxlength="60" placeholder="Мой пресет" autocomplete="off" />
-        </label>
-        <button class="param__button param__button--primary" id="presetSave" type="button">Сохранить пресет</button>
-        <div class="preset-list" id="presetList"></div>
+        <div class="spotify-block">
+          <label class="param">
+            <span class="param__label">Ссылка на плейлист</span>
+            <input
+              class="param__input param__input--wide"
+              id="spotifyPlaylist"
+              type="url"
+              placeholder="https://open.spotify.com/playlist/..."
+              autocomplete="off"
+            />
+          </label>
+          <button class="param__button param__button--primary" id="spotifyLoad" type="button">Подтянуть плейлист</button>
+          <p class="param__hint" id="spotifyStatus"></p>
+        </div>
 
-        <p class="param-group">Spotify</p>
-        <label class="param">
-          <span class="param__label">Ссылка на плейлист</span>
-          <input
-            class="param__input param__input--wide"
-            id="spotifyPlaylist"
-            type="url"
-            placeholder="https://open.spotify.com/playlist/..."
-            autocomplete="off"
-          />
-        </label>
-        <button class="param__button param__button--primary" id="spotifyLoad" type="button">Подтянуть плейлист</button>
-        <p class="param__hint" id="spotifyStatus"></p>
+        <details class="param-fold">
+          <summary class="param-fold__title">Пресеты</summary>
+          <div class="param-fold__body">
+            <label class="param">
+              <span class="param__label">Название нового пресета</span>
+              <input class="param__input param__input--wide" id="presetName" type="text" maxlength="60" placeholder="Мой пресет" autocomplete="off" />
+            </label>
+            <button class="param__button param__button--primary" id="presetSave" type="button">Сохранить пресет</button>
+            <div class="preset-list" id="presetList"></div>
+          </div>
+        </details>
 
-        <p class="param-group">Модули</p>
-        <label class="param">
-          <span class="param__label">Количество модулей</span>
-          <span class="param__row">
-            <input class="param__range" id="moduleCountRange" type="range" min="1" max="400" step="1" />
-            <input class="param__input" id="moduleCount" type="number" min="1" max="400" step="1" />
-          </span>
-        </label>
-        <label class="param">
-          <span class="param__label">Размер модуля, px</span>
-          <span class="param__row">
-            <input class="param__range" id="moduleSizeRange" type="range" min="16" max="240" step="1" />
-            <input class="param__input" id="moduleSize" type="number" min="16" max="240" step="1" />
-          </span>
-        </label>
-        <label class="param">
-          <span class="param__label">Зазор, px</span>
-          <span class="param__row">
-            <input class="param__range" id="moduleGapRange" type="range" min="-1000" max="120" step="1" />
-            <input class="param__input" id="moduleGap" type="number" min="-1000" max="120" step="1" />
-          </span>
-        </label>
-        <label class="param">
-          <span class="param__label">Угол, °</span>
-          <span class="param__row">
-            <input class="param__range" id="moduleAngleRange" type="range" min="-90" max="90" step="1" />
-            <input class="param__input" id="moduleAngle" type="number" min="-90" max="90" step="1" />
-          </span>
-        </label>
-        <label class="param">
-          <span class="param__label">Масштаб активного, %</span>
-          <span class="param__row">
-            <input class="param__range" id="activeScaleRange" type="range" min="100" max="200" step="1" />
-            <input class="param__input" id="activeScale" type="number" min="100" max="200" step="1" />
-          </span>
-        </label>
-        <label class="param">
-          <span class="param__label">Сжатие при клике, %</span>
-          <span class="param__row">
-            <input class="param__range" id="pressScaleRange" type="range" min="0" max="20" step="1" />
-            <input class="param__input" id="pressScale" type="number" min="0" max="20" step="1" />
-          </span>
-        </label>
-        <label class="param">
-          <span class="param__label">Скорость сжатия, мс</span>
-          <span class="param__row">
-            <input class="param__range" id="pressDurationRange" type="range" min="80" max="800" step="10" />
-            <input class="param__input" id="pressDuration" type="number" min="80" max="800" step="10" />
-          </span>
-        </label>
+        <details class="param-fold">
+          <summary class="param-fold__title">Модули</summary>
+          <div class="param-fold__body">
+            <label class="param">
+              <span class="param__label">Количество модулей</span>
+              <span class="param__row">
+                <input class="param__range" id="moduleCountRange" type="range" min="1" max="400" step="1" />
+                <input class="param__input" id="moduleCount" type="number" min="1" max="400" step="1" />
+              </span>
+            </label>
+            <label class="param">
+              <span class="param__label">Размер модуля, px</span>
+              <span class="param__row">
+                <input class="param__range" id="moduleSizeRange" type="range" min="16" max="240" step="1" />
+                <input class="param__input" id="moduleSize" type="number" min="16" max="240" step="1" />
+              </span>
+            </label>
+            <label class="param">
+              <span class="param__label">Зазор, px</span>
+              <span class="param__row">
+                <input class="param__range" id="moduleGapRange" type="range" min="-1000" max="120" step="1" />
+                <input class="param__input" id="moduleGap" type="number" min="-1000" max="120" step="1" />
+              </span>
+            </label>
+            <label class="param">
+              <span class="param__label">Угол, °</span>
+              <span class="param__row">
+                <input class="param__range" id="moduleAngleRange" type="range" min="-90" max="90" step="1" />
+                <input class="param__input" id="moduleAngle" type="number" min="-90" max="90" step="1" />
+              </span>
+            </label>
+            <label class="param">
+              <span class="param__label">Масштаб активного, %</span>
+              <span class="param__row">
+                <input class="param__range" id="activeScaleRange" type="range" min="100" max="200" step="1" />
+                <input class="param__input" id="activeScale" type="number" min="100" max="200" step="1" />
+              </span>
+            </label>
+            <label class="param">
+              <span class="param__label">Сжатие при клике, %</span>
+              <span class="param__row">
+                <input class="param__range" id="pressScaleRange" type="range" min="0" max="20" step="1" />
+                <input class="param__input" id="pressScale" type="number" min="0" max="20" step="1" />
+              </span>
+            </label>
+            <label class="param">
+              <span class="param__label">Скорость сжатия, мс</span>
+              <span class="param__row">
+                <input class="param__range" id="pressDurationRange" type="range" min="80" max="800" step="10" />
+                <input class="param__input" id="pressDuration" type="number" min="80" max="800" step="10" />
+              </span>
+            </label>
+          </div>
+        </details>
 
-        <p class="param-group">Ховер</p>
-        <label class="param">
-          <span class="param__label">Подъём, px</span>
-          <span class="param__row">
-            <input class="param__range" id="hoverLiftRange" type="range" min="0" max="80" step="1" />
-            <input class="param__input" id="hoverLift" type="number" min="0" max="80" step="1" />
-          </span>
-        </label>
-        <label class="param">
-          <span class="param__label">Скорость, мс</span>
-          <span class="param__row">
-            <input class="param__range" id="hoverDurationRange" type="range" min="80" max="800" step="10" />
-            <input class="param__input" id="hoverDuration" type="number" min="80" max="800" step="10" />
-          </span>
-        </label>
-        <label class="param">
-          <span class="param__label">Слежение, px</span>
-          <span class="param__row">
-            <input class="param__range" id="hoverFollowRange" type="range" min="0" max="40" step="1" />
-            <input class="param__input" id="hoverFollow" type="number" min="0" max="40" step="1" />
-          </span>
-        </label>
+        <details class="param-fold">
+          <summary class="param-fold__title">Ховер</summary>
+          <div class="param-fold__body">
+            <label class="param">
+              <span class="param__label">Подъём, px</span>
+              <span class="param__row">
+                <input class="param__range" id="hoverLiftRange" type="range" min="0" max="80" step="1" />
+                <input class="param__input" id="hoverLift" type="number" min="0" max="80" step="1" />
+              </span>
+            </label>
+            <label class="param">
+              <span class="param__label">Скорость, мс</span>
+              <span class="param__row">
+                <input class="param__range" id="hoverDurationRange" type="range" min="80" max="800" step="10" />
+                <input class="param__input" id="hoverDuration" type="number" min="80" max="800" step="10" />
+              </span>
+            </label>
+            <label class="param">
+              <span class="param__label">Слежение, px</span>
+              <span class="param__row">
+                <input class="param__range" id="hoverFollowRange" type="range" min="0" max="40" step="1" />
+                <input class="param__input" id="hoverFollow" type="number" min="0" max="40" step="1" />
+              </span>
+            </label>
+          </div>
+        </details>
 
-        <p class="param-group">Тень</p>
-        <label class="param">
-          <span class="param__label">Размытие, px</span>
-          <span class="param__row">
-            <input class="param__range" id="shadowBlurRange" type="range" min="0" max="80" step="1" />
-            <input class="param__input" id="shadowBlur" type="number" min="0" max="80" step="1" />
-          </span>
-        </label>
-        <label class="param">
-          <span class="param__label">Смещение X, px</span>
-          <span class="param__row">
-            <input class="param__range" id="shadowXRange" type="range" min="-40" max="40" step="1" />
-            <input class="param__input" id="shadowX" type="number" min="-40" max="40" step="1" />
-          </span>
-        </label>
-        <label class="param">
-          <span class="param__label">Смещение Y, px</span>
-          <span class="param__row">
-            <input class="param__range" id="shadowYRange" type="range" min="-40" max="40" step="1" />
-            <input class="param__input" id="shadowY" type="number" min="-40" max="40" step="1" />
-          </span>
-        </label>
-        <label class="param">
-          <span class="param__label">Прозрачность, %</span>
-          <span class="param__row">
-            <input class="param__range" id="shadowOpacityRange" type="range" min="0" max="100" step="1" />
-            <input class="param__input" id="shadowOpacity" type="number" min="0" max="100" step="1" />
-          </span>
-        </label>
+        <details class="param-fold">
+          <summary class="param-fold__title">Тень</summary>
+          <div class="param-fold__body">
+            <label class="param">
+              <span class="param__label">Размытие, px</span>
+              <span class="param__row">
+                <input class="param__range" id="shadowBlurRange" type="range" min="0" max="80" step="1" />
+                <input class="param__input" id="shadowBlur" type="number" min="0" max="80" step="1" />
+              </span>
+            </label>
+            <label class="param">
+              <span class="param__label">Смещение X, px</span>
+              <span class="param__row">
+                <input class="param__range" id="shadowXRange" type="range" min="-40" max="40" step="1" />
+                <input class="param__input" id="shadowX" type="number" min="-40" max="40" step="1" />
+              </span>
+            </label>
+            <label class="param">
+              <span class="param__label">Смещение Y, px</span>
+              <span class="param__row">
+                <input class="param__range" id="shadowYRange" type="range" min="-40" max="40" step="1" />
+                <input class="param__input" id="shadowY" type="number" min="-40" max="40" step="1" />
+              </span>
+            </label>
+            <label class="param">
+              <span class="param__label">Прозрачность, %</span>
+              <span class="param__row">
+                <input class="param__range" id="shadowOpacityRange" type="range" min="0" max="100" step="1" />
+                <input class="param__input" id="shadowOpacity" type="number" min="0" max="100" step="1" />
+              </span>
+            </label>
+          </div>
+        </details>
 
         <div id="zoomParams">
-        <p class="param-group">Полотно</p>
-        <label class="param">
-          <span class="param__label">Зум, %</span>
-          <span class="param__row">
-            <input class="param__range" id="viewZoomRange" type="range" min="5" max="100" step="95" />
-            <input class="param__input" id="viewZoom" type="number" min="5" max="100" step="95" />
-          </span>
-        </label>
-        <label class="param">
-          <span class="param__label">Плавность, мс</span>
-          <span class="param__row">
-            <input class="param__range" id="zoomDurationRange" type="range" min="80" max="800" step="10" />
-            <input class="param__input" id="zoomDuration" type="number" min="80" max="800" step="10" />
-          </span>
-        </label>
-        <label class="param">
-          <span class="param__label">Инерция</span>
-          <span class="param__row">
-            <input class="param__range" id="zoomInertiaRange" type="range" min="0" max="100" step="1" />
-            <input class="param__input" id="zoomInertia" type="number" min="0" max="100" step="1" />
-          </span>
-        </label>
-        <label class="param__check">
-          <input id="zoomShrinkOn" type="checkbox" />
-          Уменьшать неактивные в отдалении
-        </label>
-        <label class="param">
-          <span class="param__label">Уменьшение, %</span>
-          <span class="param__row">
-            <input class="param__range" id="zoomShrinkRange" type="range" min="0" max="50" step="1" />
-            <input class="param__input" id="zoomShrink" type="number" min="0" max="50" step="1" />
-          </span>
-        </label>
-        <label class="param__check">
-          <input id="zoomBlurOn" type="checkbox" />
-          Размывать неактивные в отдалении
-        </label>
-        <label class="param">
-          <span class="param__label">Размытие, px</span>
-          <span class="param__row">
-            <input class="param__range" id="zoomBlurRange" type="range" min="0" max="24" step="1" />
-            <input class="param__input" id="zoomBlur" type="number" min="0" max="24" step="1" />
-          </span>
-        </label>
+          <details class="param-fold">
+            <summary class="param-fold__title">Полотно</summary>
+            <div class="param-fold__body">
+              <label class="param">
+                <span class="param__label">Зум, %</span>
+                <span class="param__row">
+                  <input class="param__range" id="viewZoomRange" type="range" min="5" max="100" step="95" />
+                  <input class="param__input" id="viewZoom" type="number" min="5" max="100" step="95" />
+                </span>
+              </label>
+              <label class="param">
+                <span class="param__label">Плавность, мс</span>
+                <span class="param__row">
+                  <input class="param__range" id="zoomDurationRange" type="range" min="80" max="800" step="10" />
+                  <input class="param__input" id="zoomDuration" type="number" min="80" max="800" step="10" />
+                </span>
+              </label>
+              <label class="param">
+                <span class="param__label">Инерция</span>
+                <span class="param__row">
+                  <input class="param__range" id="zoomInertiaRange" type="range" min="0" max="100" step="1" />
+                  <input class="param__input" id="zoomInertia" type="number" min="0" max="100" step="1" />
+                </span>
+              </label>
+              <label class="param__check">
+                <input id="zoomShrinkOn" type="checkbox" />
+                Уменьшать неактивные в отдалении
+              </label>
+              <label class="param">
+                <span class="param__label">Уменьшение, %</span>
+                <span class="param__row">
+                  <input class="param__range" id="zoomShrinkRange" type="range" min="0" max="50" step="1" />
+                  <input class="param__input" id="zoomShrink" type="number" min="0" max="50" step="1" />
+                </span>
+              </label>
+              <label class="param__check">
+                <input id="zoomBlurOn" type="checkbox" />
+                Размывать неактивные в отдалении
+              </label>
+              <label class="param">
+                <span class="param__label">Размытие, px</span>
+                <span class="param__row">
+                  <input class="param__range" id="zoomBlurRange" type="range" min="0" max="24" step="1" />
+                  <input class="param__input" id="zoomBlur" type="number" min="0" max="24" step="1" />
+                </span>
+              </label>
+            </div>
+          </details>
 
-        <p class="param-group">Скролл</p>
-        <label class="param">
-          <span class="param__label">Чувствительность</span>
-          <span class="param__row">
-            <input class="param__range" id="scrollSensitivityRange" type="range" min="10" max="200" step="1" />
-            <input class="param__input" id="scrollSensitivity" type="number" min="10" max="200" step="1" />
-          </span>
-        </label>
-        <label class="param">
-          <span class="param__label">Инерция</span>
-          <span class="param__row">
-            <input class="param__range" id="scrollInertiaRange" type="range" min="0" max="100" step="1" />
-            <input class="param__input" id="scrollInertia" type="number" min="0" max="100" step="1" />
-          </span>
-        </label>
-        <label class="param">
-          <span class="param__label">Порог переключения</span>
-          <span class="param__row">
-            <input class="param__range" id="scrollThresholdRange" type="range" min="10" max="90" step="1" />
-            <input class="param__input" id="scrollThreshold" type="number" min="10" max="90" step="1" />
-          </span>
-        </label>
-        <label class="param">
-          <span class="param__label">Сплющивание</span>
-          <span class="param__row">
-            <input class="param__range" id="scrollSquashRange" type="range" min="0" max="100" step="1" />
-            <input class="param__input" id="scrollSquash" type="number" min="0" max="100" step="1" />
-          </span>
-        </label>
-        <label class="param__check">
-          <input id="scrollShrinkOn" type="checkbox" />
-          Уменьшать неактивные при скролле
-        </label>
-        <label class="param">
-          <span class="param__label">Уменьшение, %</span>
-          <span class="param__row">
-            <input class="param__range" id="scrollShrinkRange" type="range" min="0" max="50" step="1" />
-            <input class="param__input" id="scrollShrink" type="number" min="0" max="50" step="1" />
-          </span>
-        </label>
-        <label class="param__check">
-          <input id="scrollGapOn" type="checkbox" />
-          Увеличивать зазор при скролле
-        </label>
-        <label class="param">
-          <span class="param__label">Зазор, %</span>
-          <span class="param__row">
-            <input class="param__range" id="scrollGapBoostRange" type="range" min="0" max="1000" step="1" />
-            <input class="param__input" id="scrollGapBoost" type="number" min="0" max="1000" step="1" />
-          </span>
-        </label>
-        <label class="param__check">
-          <input id="scrollBlurOn" type="checkbox" />
-          Размывать неактивные при скролле
-        </label>
-        <label class="param">
-          <span class="param__label">Размытие, px</span>
-          <span class="param__row">
-            <input class="param__range" id="scrollBlurRange" type="range" min="0" max="24" step="1" />
-            <input class="param__input" id="scrollBlur" type="number" min="0" max="24" step="1" />
-          </span>
-        </label>
+          <details class="param-fold">
+            <summary class="param-fold__title">Скролл</summary>
+            <div class="param-fold__body">
+              <label class="param">
+                <span class="param__label">Чувствительность</span>
+                <span class="param__row">
+                  <input class="param__range" id="scrollSensitivityRange" type="range" min="10" max="200" step="1" />
+                  <input class="param__input" id="scrollSensitivity" type="number" min="10" max="200" step="1" />
+                </span>
+              </label>
+              <label class="param">
+                <span class="param__label">Инерция</span>
+                <span class="param__row">
+                  <input class="param__range" id="scrollInertiaRange" type="range" min="0" max="100" step="1" />
+                  <input class="param__input" id="scrollInertia" type="number" min="0" max="100" step="1" />
+                </span>
+              </label>
+              <label class="param">
+                <span class="param__label">Порог переключения</span>
+                <span class="param__row">
+                  <input class="param__range" id="scrollThresholdRange" type="range" min="10" max="90" step="1" />
+                  <input class="param__input" id="scrollThreshold" type="number" min="10" max="90" step="1" />
+                </span>
+              </label>
+              <label class="param">
+                <span class="param__label">Сплющивание</span>
+                <span class="param__row">
+                  <input class="param__range" id="scrollSquashRange" type="range" min="0" max="100" step="1" />
+                  <input class="param__input" id="scrollSquash" type="number" min="0" max="100" step="1" />
+                </span>
+              </label>
+              <label class="param__check">
+                <input id="scrollShrinkOn" type="checkbox" />
+                Уменьшать неактивные при скролле
+              </label>
+              <label class="param">
+                <span class="param__label">Уменьшение, %</span>
+                <span class="param__row">
+                  <input class="param__range" id="scrollShrinkRange" type="range" min="0" max="50" step="1" />
+                  <input class="param__input" id="scrollShrink" type="number" min="0" max="50" step="1" />
+                </span>
+              </label>
+              <label class="param__check">
+                <input id="scrollGapOn" type="checkbox" />
+                Увеличивать зазор при скролле
+              </label>
+              <label class="param">
+                <span class="param__label">Зазор, %</span>
+                <span class="param__row">
+                  <input class="param__range" id="scrollGapBoostRange" type="range" min="0" max="1000" step="1" />
+                  <input class="param__input" id="scrollGapBoost" type="number" min="0" max="1000" step="1" />
+                </span>
+              </label>
+              <label class="param__check">
+                <input id="scrollBlurOn" type="checkbox" />
+                Размывать неактивные при скролле
+              </label>
+              <label class="param">
+                <span class="param__label">Размытие, px</span>
+                <span class="param__row">
+                  <input class="param__range" id="scrollBlurRange" type="range" min="0" max="24" step="1" />
+                  <input class="param__input" id="scrollBlur" type="number" min="0" max="24" step="1" />
+                </span>
+              </label>
+            </div>
+          </details>
         </div>
 
-        <div class="params-tab" id="tabVizPanel" role="tabpanel" aria-labelledby="tabVizBtn" hidden>
-          <p class="param-group param-group--first">Фон</p>
-          <label class="param__check">
-            <input id="vizBgOn" type="checkbox" />
-            Окрашивать фон
-          </label>
-          <label class="param">
-            <span class="param__label">Режим</span>
-            <select class="param__select" id="vizBgMode">
-              <option value="cover">Цвет обложки</option>
-              <option value="coverBlur">Размытая обложка</option>
-              <option value="lidar">LiDAR / Kinect</option>
-            </select>
-          </label>
-          <label class="param" id="vizBgColorPickRow" hidden>
-            <span class="param__label">Подбор цвета</span>
-            <select class="param__select" id="vizBgColorPick">
-              <option value="mix">Смешанный</option>
-              <option value="dominant">Доминирующий</option>
-            </select>
-          </label>
-          <label class="param" id="vizBgFadeRow" hidden>
-            <span class="param__label">Скорость анимации, мс</span>
-            <span class="param__row">
-              <input class="param__range" id="vizBgFadeRange" type="range" min="40" max="2000" step="10" />
-              <input class="param__input" id="vizBgFade" type="number" min="40" max="2000" step="10" />
-            </span>
-          </label>
-          <label class="param" id="vizBgBlurRow" hidden>
-            <span class="param__label">Размытие, px</span>
-            <span class="param__row">
-              <input class="param__range" id="vizBgBlurRange" type="range" min="0" max="80" step="1" />
-              <input class="param__input" id="vizBgBlur" type="number" min="0" max="80" step="1" />
-            </span>
-          </label>
-          <div id="vizLidarRows" hidden>
-            <div class="param">
-              <span class="param__label">
-                Плотность точек, %
-                <label class="param__sound" title="Привязать к звуку"><input id="vizLidarDensityAudio" type="checkbox" /> звук</label>
-              </span>
+        <details class="param-fold">
+          <summary class="param-fold__title">Фон</summary>
+          <div class="param-fold__body">
+            <label class="param__check">
+              <input id="vizBgOn" type="checkbox" />
+              Окрашивать фон
+            </label>
+            <label class="param">
+              <span class="param__label">Режим</span>
+              <select class="param__select" id="vizBgMode">
+                <option value="cover">Цвет обложки</option>
+                <option value="coverBlur">Размытая обложка</option>
+                <option value="lidar">LiDAR / Kinect</option>
+              </select>
+            </label>
+            <label class="param" id="vizBgColorPickRow" hidden>
+              <span class="param__label">Подбор цвета</span>
+              <select class="param__select" id="vizBgColorPick">
+                <option value="mix">Смешанный</option>
+                <option value="dominant">Доминирующий</option>
+              </select>
+            </label>
+            <label class="param" id="vizBgFadeRow" hidden>
+              <span class="param__label">Скорость анимации, мс</span>
               <span class="param__row">
-                <input class="param__range" id="vizLidarDensityRange" type="range" min="20" max="100" step="1" />
-                <input class="param__input" id="vizLidarDensity" type="number" min="20" max="100" step="1" />
+                <input class="param__range" id="vizBgFadeRange" type="range" min="40" max="2000" step="10" />
+                <input class="param__input" id="vizBgFade" type="number" min="40" max="2000" step="10" />
               </span>
-            </div>
-            <div class="param">
-              <span class="param__label">
-                Глубина
-                <label class="param__sound" title="Привязать к звуку"><input id="vizLidarDepthAudio" type="checkbox" checked /> звук</label>
-              </span>
+            </label>
+            <label class="param" id="vizBgBlurRow" hidden>
+              <span class="param__label">Размытие, px</span>
               <span class="param__row">
-                <input class="param__range" id="vizLidarDepthRange" type="range" min="0" max="100" step="1" />
-                <input class="param__input" id="vizLidarDepth" type="number" min="0" max="100" step="1" />
+                <input class="param__range" id="vizBgBlurRange" type="range" min="0" max="80" step="1" />
+                <input class="param__input" id="vizBgBlur" type="number" min="0" max="80" step="1" />
               </span>
-            </div>
-            <div class="param">
-              <span class="param__label">
-                Реакция на звук
-                <label class="param__sound" title="Автоусиление по энергии трека"><input id="vizLidarReactAudio" type="checkbox" checked /> звук</label>
-              </span>
-              <span class="param__row">
-                <input class="param__range" id="vizLidarReactRange" type="range" min="0" max="100" step="1" />
-                <input class="param__input" id="vizLidarReact" type="number" min="0" max="100" step="1" />
-              </span>
-            </div>
-            <div class="param">
-              <span class="param__label">
-                Поворот, °
-                <label class="param__sound" title="Привязать к звуку"><input id="vizLidarYawAudio" type="checkbox" /> звук</label>
-              </span>
-              <span class="param__row">
-                <input class="param__range" id="vizLidarYawRange" type="range" min="0" max="360" step="1" />
-                <input class="param__input" id="vizLidarYaw" type="number" min="0" max="360" step="1" />
-              </span>
-            </div>
-            <div class="param">
-              <span class="param__label">
-                Масштаб, %
-                <label class="param__sound" title="Привязать к звуку"><input id="vizLidarScaleAudio" type="checkbox" checked /> звук</label>
-              </span>
-              <span class="param__row">
-                <input class="param__range" id="vizLidarScaleRange" type="range" min="20" max="250" step="1" />
-                <input class="param__input" id="vizLidarScale" type="number" min="20" max="250" step="1" />
-              </span>
-            </div>
-            <div class="param">
-              <span class="param__label">
-                Размер точек
-                <label class="param__sound" title="Привязать к звуку"><input id="vizLidarSizeAudio" type="checkbox" checked /> звук</label>
-              </span>
-              <span class="param__row">
-                <input class="param__range" id="vizLidarSizeRange" type="range" min="1" max="12" step="1" />
-                <input class="param__input" id="vizLidarSize" type="number" min="1" max="12" step="1" />
-              </span>
-            </div>
-            <div class="param" id="vizLidarGlowParam" hidden>
-              <span class="param__label">
-                Сила свечения
-                <label class="param__sound" title="Привязать к звуку"><input id="vizLidarGlowAudio" type="checkbox" /> звук</label>
-              </span>
-              <span class="param__row" id="vizLidarGlowRow">
-                <input class="param__range" id="vizLidarGlowRange" type="range" min="0" max="100" step="1" />
-                <input class="param__input" id="vizLidarGlow" type="number" min="0" max="100" step="1" />
-              </span>
-            </div>
-            <div class="param-check-row">
-              <label class="param__check">
-                <input id="vizLidarSpin" type="checkbox" checked />
-                Вращать автоматически
-              </label>
-              <label class="param__sound" title="Скорость от звука"><input id="vizLidarSpinAudio" type="checkbox" checked /> звук</label>
-            </div>
-            <div class="param-check-row">
-              <label class="param__check">
-                <input id="vizLidarCoverBg" type="checkbox" />
-                Фон с обложки
-              </label>
-              <label class="param__sound" title="Привязать к звуку"><input id="vizLidarCoverBgAudio" type="checkbox" /> звук</label>
-            </div>
-            <div class="param-check-row">
-              <label class="param__check">
-                <input id="vizLidarGlowOn" type="checkbox" />
-                Свечение точек
-              </label>
-            </div>
-            <div class="param-check-row">
-              <label class="param__check">
-                <input id="vizLidarLasers" type="checkbox" />
-                Лазеры
-              </label>
-              <label class="param__sound" title="Привязать к звуку"><input id="vizLidarLasersAudio" type="checkbox" checked /> звук</label>
+            </label>
+            <div id="vizLidarRows" hidden>
+              <div class="param">
+                <span class="param__label">
+                  Плотность точек, %
+                  <label class="param__sound" title="Привязать к звуку"><input id="vizLidarDensityAudio" type="checkbox" /> звук</label>
+                </span>
+                <span class="param__row">
+                  <input class="param__range" id="vizLidarDensityRange" type="range" min="20" max="100" step="1" />
+                  <input class="param__input" id="vizLidarDensity" type="number" min="20" max="100" step="1" />
+                </span>
+              </div>
+              <div class="param">
+                <span class="param__label">
+                  Глубина
+                  <label class="param__sound" title="Привязать к звуку"><input id="vizLidarDepthAudio" type="checkbox" checked /> звук</label>
+                </span>
+                <span class="param__row">
+                  <input class="param__range" id="vizLidarDepthRange" type="range" min="0" max="100" step="1" />
+                  <input class="param__input" id="vizLidarDepth" type="number" min="0" max="100" step="1" />
+                </span>
+              </div>
+              <div class="param">
+                <span class="param__label">
+                  Реакция на звук
+                  <label class="param__sound" title="Автоусиление по энергии трека"><input id="vizLidarReactAudio" type="checkbox" checked /> звук</label>
+                </span>
+                <span class="param__row">
+                  <input class="param__range" id="vizLidarReactRange" type="range" min="0" max="100" step="1" />
+                  <input class="param__input" id="vizLidarReact" type="number" min="0" max="100" step="1" />
+                </span>
+              </div>
+              <div class="param">
+                <span class="param__label">
+                  Поворот, °
+                  <label class="param__sound" title="Привязать к звуку"><input id="vizLidarYawAudio" type="checkbox" /> звук</label>
+                </span>
+                <span class="param__row">
+                  <input class="param__range" id="vizLidarYawRange" type="range" min="0" max="360" step="1" />
+                  <input class="param__input" id="vizLidarYaw" type="number" min="0" max="360" step="1" />
+                </span>
+              </div>
+              <div class="param">
+                <span class="param__label">
+                  Масштаб, %
+                  <label class="param__sound" title="Привязать к звуку"><input id="vizLidarScaleAudio" type="checkbox" checked /> звук</label>
+                </span>
+                <span class="param__row">
+                  <input class="param__range" id="vizLidarScaleRange" type="range" min="20" max="250" step="1" />
+                  <input class="param__input" id="vizLidarScale" type="number" min="20" max="250" step="1" />
+                </span>
+              </div>
+              <div class="param">
+                <span class="param__label">
+                  Размер точек
+                  <label class="param__sound" title="Привязать к звуку"><input id="vizLidarSizeAudio" type="checkbox" checked /> звук</label>
+                </span>
+                <span class="param__row">
+                  <input class="param__range" id="vizLidarSizeRange" type="range" min="1" max="12" step="1" />
+                  <input class="param__input" id="vizLidarSize" type="number" min="1" max="12" step="1" />
+                </span>
+              </div>
+              <div class="param" id="vizLidarGlowParam" hidden>
+                <span class="param__label">
+                  Сила свечения
+                  <label class="param__sound" title="Привязать к звуку"><input id="vizLidarGlowAudio" type="checkbox" /> звук</label>
+                </span>
+                <span class="param__row" id="vizLidarGlowRow">
+                  <input class="param__range" id="vizLidarGlowRange" type="range" min="0" max="100" step="1" />
+                  <input class="param__input" id="vizLidarGlow" type="number" min="0" max="100" step="1" />
+                </span>
+              </div>
+              <div class="param-check-row">
+                <label class="param__check">
+                  <input id="vizLidarSpin" type="checkbox" checked />
+                  Вращать автоматически
+                </label>
+                <label class="param__sound" title="Скорость от звука"><input id="vizLidarSpinAudio" type="checkbox" checked /> звук</label>
+              </div>
+              <div class="param-check-row">
+                <label class="param__check">
+                  <input id="vizLidarCoverBg" type="checkbox" />
+                  Фон с обложки
+                </label>
+                <label class="param__sound" title="Привязать к звуку"><input id="vizLidarCoverBgAudio" type="checkbox" /> звук</label>
+              </div>
+              <div class="param-check-row">
+                <label class="param__check">
+                  <input id="vizLidarGlowOn" type="checkbox" />
+                  Свечение точек
+                </label>
+              </div>
+              <div class="param-check-row">
+                <label class="param__check">
+                  <input id="vizLidarLasers" type="checkbox" />
+                  Лазеры
+                </label>
+                <label class="param__sound" title="Привязать к звуку"><input id="vizLidarLasersAudio" type="checkbox" checked /> звук</label>
+              </div>
             </div>
           </div>
-          <p class="param__hint">Цвет обложки меняется при переключении модуля. На паузе фон белый. LiDAR разбивает обложку на точки и двигает их под превью.</p>
-        </div>
+        </details>
       </div>
     </aside>
 
-    <script src="script.js?v=69"></script>
+    <script src="script.js?v=70"></script>
   </body>
 </html>
