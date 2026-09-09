@@ -2255,6 +2255,8 @@ function extractCoverPalette(url) {
 
   const job = new Promise((resolve) => {
     const image = new Image();
+    let usedProxy = false;
+    image.crossOrigin = "anonymous";
     image.decoding = "async";
     image.onload = () => {
       const palette = sampleCoverPalette(image);
@@ -2263,10 +2265,15 @@ function extractCoverPalette(url) {
       resolve(coverColorCache.get(url) || palette);
     };
     image.onerror = () => {
+      if (!usedProxy && isSpotifyCdnUrl(url)) {
+        usedProxy = true;
+        image.src = coverImageSrc(url, true);
+        return;
+      }
       coverColorPending.delete(url);
       resolve(null);
     };
-    image.src = `/api/image?url=${encodeURIComponent(url)}`;
+    image.src = coverImageSrc(url);
   });
   coverColorPending.set(url, job);
   return job;
@@ -2384,7 +2391,6 @@ function applyCoverFill(url) {
   extractCoverPalette(url).then((palette) => {
     const color = palette?.[method] || palette?.mix || "";
     if (!color) return;
-    if (!(isTrackPlaying() || vizHoldPlaying)) return;
     if (activeCoverUrl() !== url) return;
     const st = loadState();
     if (!st.vizBgOn || vizBgModeOf(st) !== "cover") return;
@@ -2496,21 +2502,36 @@ void main() {
 }
 `;
 
-function mediaUrl(url) {
-  const raw = String(url || "");
-  if (!raw) return raw;
-  if (raw.startsWith("/api/") || raw.startsWith(window.location.origin)) return raw;
+function isSpotifyCdnUrl(url) {
   try {
-    const host = new URL(raw, window.location.href).hostname.toLowerCase();
-    const spotifyCdn =
+    const host = new URL(String(url || ""), window.location.href).hostname.toLowerCase();
+    return (
       host === "scdn.co" ||
+      host === "spotifycdn.com" ||
       host.endsWith(".scdn.co") ||
       host.endsWith(".spotifycdn.com") ||
       host.endsWith(".spotify.com") ||
-      host.endsWith(".akamaized.net");
-    if (spotifyCdn) return raw;
-  } catch {}
+      host.endsWith(".akamaized.net")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function mediaUrl(url) {
+  const raw = String(url || "");
+  if (!raw) return raw;
+  if (raw.startsWith("/api/") || raw.startsWith(window.location.origin) || isSpotifyCdnUrl(raw)) return raw;
   return `/api/audio?url=${encodeURIComponent(raw)}`;
+}
+
+function coverImageSrc(url, useProxy = false) {
+  const raw = String(url || "");
+  if (!raw) return "";
+  if (useProxy || (!isSpotifyCdnUrl(raw) && !raw.startsWith("/api/"))) {
+    return `/api/image?url=${encodeURIComponent(raw)}`;
+  }
+  return raw;
 }
 
 function compileShader(gl, type, source) {
@@ -2740,14 +2761,19 @@ function loadLidarCover(url, density) {
     return;
   }
   const image = new Image();
+  image.crossOrigin = "anonymous";
   image.decoding = "async";
   image.onload = () => {
     const mesh = sampleLidarMesh(image, density);
     if (mesh) lidarMeshCache.set(key, mesh);
     if (lidarUrl === key) uploadLidarMesh(mesh);
   };
-  image.onerror = () => {};
-  image.src = `/api/image?url=${encodeURIComponent(url)}`;
+  image.onerror = () => {
+    if (isSpotifyCdnUrl(url) && !image.src.includes("/api/image")) {
+      image.src = coverImageSrc(url, true);
+    }
+  };
+  image.src = coverImageSrc(url);
 }
 
 function startLidarLoop() {
@@ -2952,17 +2978,17 @@ function applyVizBackground() {
     return;
   }
 
-  if (!playing) {
-    setStageBackground(STAGE_BG_PAUSE);
-    setVizCoverLayer(playingCoverUrl(), blurPx, false);
-    setLidarVisible(false, playingCoverUrl());
-    return;
-  }
-
   if (mode === "cover") {
     setLidarVisible(false, "");
     setVizCoverLayer("", blurPx, false);
     applyCoverFill(activeCoverUrl());
+    return;
+  }
+
+  if (!playing) {
+    setStageBackground(STAGE_BG_PAUSE);
+    setVizCoverLayer(playingCoverUrl(), blurPx, false);
+    setLidarVisible(false, playingCoverUrl());
     return;
   }
 
