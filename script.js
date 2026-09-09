@@ -505,13 +505,22 @@ function clampPosition(x, y) {
   };
 }
 
+function dockMobilePanel() {
+  if (!isVerticalStrip() || !panel || panel.hidden) return;
+  const box = panelViewBox();
+  const maxH = Math.max(160, Math.round(box.h * 0.5));
+  panel.style.left = `${box.x}px`;
+  panel.style.width = `${box.w}px`;
+  panel.style.right = "auto";
+  panel.style.bottom = "auto";
+  panel.style.maxHeight = `${maxH}px`;
+  const height = Math.min(panel.getBoundingClientRect().height || maxH, maxH);
+  panel.style.top = `${Math.round(box.y + box.h - height)}px`;
+}
+
 function placePanel(x, y) {
   if (isVerticalStrip()) {
-    panel.style.left = "";
-    panel.style.top = "";
-    panel.style.right = "";
-    panel.style.bottom = "";
-    panel.style.width = "";
+    dockMobilePanel();
     return { x: 0, y: 0 };
   }
   const pos = clampPosition(x, y);
@@ -519,6 +528,8 @@ function placePanel(x, y) {
   panel.style.top = `${pos.y}px`;
   panel.style.right = "auto";
   panel.style.bottom = "auto";
+  panel.style.width = "";
+  panel.style.maxHeight = "";
   return pos;
 }
 
@@ -538,6 +549,7 @@ function openPanel() {
 
   const fallback = defaultPosition();
   placePanel(state.x ?? fallback.x, state.y ?? fallback.y);
+  if (isVerticalStrip()) requestAnimationFrame(dockMobilePanel);
   saveState({ open: true });
 }
 
@@ -552,6 +564,12 @@ function togglePanel() {
 }
 
 closeBtn.addEventListener("click", closePanel);
+
+panel.querySelectorAll("details.param-fold").forEach((fold) => {
+  fold.addEventListener("toggle", () => {
+    if (isVerticalStrip()) requestAnimationFrame(dockMobilePanel);
+  });
+});
 
 document.addEventListener("dblclick", (event) => {
   if (event.target.closest(".params-panel")) return;
@@ -598,6 +616,7 @@ window.addEventListener("resize", () => {
 if (window.visualViewport) {
   const relayout = () => {
     if (!isVerticalStrip()) return;
+    dockMobilePanel();
     applyRotations();
     resizeLidar();
   };
