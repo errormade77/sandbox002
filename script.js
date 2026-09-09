@@ -429,15 +429,30 @@ function savePresetsState(patch) {
   pushPresetsToServer(next);
 }
 
-async function fetchServerPresets() {
+async function fetchJson(url) {
   try {
-    const res = await fetch("/api/presets", { cache: "no-store" });
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) return null;
     const data = await res.json();
     return data && typeof data === "object" ? data : null;
   } catch {
     return null;
   }
+}
+
+function bundledPresetsUrl() {
+  const script = document.querySelector('script[src*="script.js"]');
+  try {
+    return new URL("stand-presets.json", script?.src || window.location.href).href;
+  } catch {
+    return "stand-presets.json";
+  }
+}
+
+async function fetchServerPresets() {
+  const remote = await fetchJson("/api/presets");
+  if (Array.isArray(remote?.presets) && remote.presets.length) return remote;
+  return fetchJson(bundledPresetsUrl());
 }
 
 function pushPresetsToServer(state) {
